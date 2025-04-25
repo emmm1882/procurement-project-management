@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ittry.procurement.mapper.ProjectMapper">
+    
+    <!-- 项目查询结果映射 -->
+    <resultMap id="ProjectResultMap" type="com.ittry.procurement.domain.Project">
+        <id property="id" column="id"/>
+        <result property="projectCode" column="project_code"/>
+        <result property="projectName" column="project_name"/>
+        <result property="projectType" column="project_type"/>
+        <result property="projectStatus" column="project_status"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="description" column="description"/>
+        <result property="department" column="department"/>
+        <result property="manager" column="manager"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="updateBy" column="update_by"/>
+    </resultMap>
+    
+    <!-- 查询条件 -->
+    <sql id="queryCondition">
+        <where>
+            <if test="projectCode != null and projectCode != ''">
+                AND project_code LIKE CONCAT('%', #{projectCode}, '%')
+            </if>
+            <if test="projectName != null and projectName != ''">
+                AND project_name LIKE CONCAT('%', #{projectName}, '%')
+            </if>
+            <if test="projectType != null and projectType != ''">
+                AND project_type = #{projectType}
+            </if>
+            <if test="projectStatus != null and projectStatus != ''">
+                AND project_status = #{projectStatus}
+            </if>
+            <if test="department != null and department != ''">
+                AND department = #{department}
+            </if>
+            <if test="manager != null and manager != ''">
+                AND manager = #{manager}
+            </if>
+            <if test="startDateBegin != null">
+                AND start_date >= #{startDateBegin}
+            </if>
+            <if test="startDateEnd != null">
+                AND start_date &lt;= #{startDateEnd}
+            </if>
+        </where>
+    </sql>
+    
+    <!-- 查询项目列表 -->
+    <select id="selectProjectList" parameterType="com.ittry.procurement.domain.ProjectQuery" resultMap="ProjectResultMap">
+        SELECT * FROM t_project
+        <include refid="queryCondition"/>
+        ORDER BY create_time DESC
+        LIMIT #{pageSize} OFFSET #{pageNum}
+    </select>
+    
+    <!-- 查询项目总数 -->
+    <select id="selectProjectCount" parameterType="com.ittry.procurement.domain.ProjectQuery" resultType="int">
+        SELECT COUNT(*) FROM t_project
+        <include refid="queryCondition"/>
+    </select>
+    
+    <!-- 新增项目 -->
+    <insert id="insertProject" parameterType="com.ittry.procurement.domain.Project" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_project (
+            project_code, project_name, project_type, project_status,
+            total_amount, description, department, manager,
+            start_date, end_date, create_time, create_by,
+            update_time, update_by
+        ) VALUES (
+            #{projectCode}, #{projectName}, #{projectType}, #{projectStatus},
+            #{totalAmount}, #{description}, #{department}, #{manager},
+            #{startDate}, #{endDate}, #{createTime}, #{createBy},
+            #{updateTime}, #{updateBy}
+        )
+    </insert>
+    
+    <!-- 批量新增项目明细 -->
+    <insert id="batchInsertProjectDetails">
+        INSERT INTO t_project_detail (
+            project_id, item_code, item_name, item_type,
+            specification, unit, quantity, unit_price,
+            total_price, supplier, remark, create_time,
+            create_by, update_time, update_by
+        ) VALUES
+        <foreach collection="details" item="detail" separator=",">
+        (
+            #{projectId}, #{detail.itemCode}, #{detail.itemName}, #{detail.itemType},
+            #{detail.specification}, #{detail.unit}, #{detail.quantity}, #{detail.unitPrice},
+            #{detail.totalPrice}, #{detail.supplier}, #{detail.remark}, #{detail.createTime},
+            #{detail.createBy}, #{detail.updateTime}, #{detail.updateBy}
+        )
+        </foreach>
+    </insert>
+    
+</mapper>
